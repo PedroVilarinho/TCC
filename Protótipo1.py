@@ -50,7 +50,6 @@ class IA(Jogador):
        
         return max(carta.atributos, key=lambda k: carta.atributos[k])
 
-# Classe para representar o jogo de Super Trunfo
 class SuperTrunfo:
     def __init__(self, jogadores, baralho):
         self.jogadores = jogadores
@@ -113,23 +112,19 @@ class SuperTrunfo:
                 elif valor_atributo == cartas_para_ganhar[0][1].atributos[atributo]:
                     cartas_para_ganhar.append((jogador, carta))
             
-            # Verificar se houve um empate
             if len(cartas_para_ganhar) > 1:
                 print("A rodada foi um empate!")
-                # Em caso de empate, cada jogador recebe de volta sua própria carta
+
                 for jogador, carta in cartas_para_ganhar:
                     jogador.adicionar_carta(carta)
             else:
-                # Vencedor recebe todas as cartas jogadas na rodada
                 print(f"{vencedor.nome} venceu a rodada!")
                 vencedor.receber_cartas([carta for _, carta in cartas_jogadas])
 
-            # Rotacionar a escolha do atributo para o próximo jogador
             self.indice_jogador_atual = (self.indice_jogador_atual + 1) % len(self.jogadores)
 
             rodada += 1
         
-        # Determinar o vencedor final
         vencedor_final = None
         max_cartas = 0
         for jogador in self.jogadores:
@@ -143,10 +138,8 @@ class SuperTrunfo:
             print("\nJogo terminou com empate!")
 
     def escolher_atributo_jogador(self, carta):
-        # Mostra os atributos da carta jogada pelo jogador
         print(f"Atributos da carta jogada: {carta.atributos}")
         
-        # Loop para pedir ao jogador que escolha um atributo válido
         while True:
             atributo = input("Escolha um atributo para comparar: ").strip().lower()
             if atributo in carta.atributos:
@@ -154,9 +147,7 @@ class SuperTrunfo:
             else:
                 print("Atributo inválido. Por favor, escolha um atributo válido entre os seguintes: " + ", ".join(carta.atributos))
 
-# Exemplo de uso
 if __name__ == '__main__':
-    # Criar um baralho de cartas temáticas de carros com 32 cartas e 4 atributos
     baralho = [
         Carta("Carro A", {"velocidade": 220, "potencia": 150, "peso": 1200, "consumo": 12}),
         Carta("Carro B", {"velocidade": 200, "potencia": 180, "peso": 1300, "consumo": 15}),
