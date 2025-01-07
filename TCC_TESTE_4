@@ -1,0 +1,143 @@
+import random
+
+class Card:
+    def __init__(self, name, força, velocidade, inteligencia, vigor):
+        self.name = name
+        self.força = força
+        self.velocidade = velocidade
+        self.inteligencia = inteligencia
+        self.vigor = vigor
+
+    def compare(self, other, attribute):
+        return getattr(self, attribute) - getattr(other, attribute)
+
+class Player:
+    def __init__(self, name, cards, is_human=False):
+        self.name = name
+        self.cards = cards
+        self.is_human = is_human
+
+    def choose_attribute(self):
+        if self.is_human:
+            attributes = ['força', 'velocidade', 'inteligencia', 'vigor']
+            while True:
+                choice = input(f"{self.name}, escolha um atributo {attributes}: ").strip().lower()
+                if choice in attributes:
+                    return choice
+                print("Escolha inválida. Tente novamente.")
+        else:
+            return random.choice(['força', 'velocidade', 'inteligencia', 'vigor'])
+
+    def play_card(self):
+        if self.is_human:
+            return self.choose_card()
+        else:
+            return self.cards.pop(0)
+
+    def choose_card(self):
+        print(f"{self.name}, estas são as suas cartas:")
+        for idx, card in enumerate(self.cards):
+            print(f"{idx + 1}. {card.name} - Força: {card.força}, Velocidade: {card.velocidade}, Inteligência: {card.inteligencia}, Vigor: {card.vigor}")
+
+        while True:
+            try:
+                choice = int(input("Escolha uma carta para jogar (número): ")) - 1
+                if 0 <= choice < len(self.cards):
+                    return self.cards.pop(choice)
+                else:
+                    print("Escolha inválida. Tente novamente.")
+            except ValueError:
+                print("Entrada inválida. Por favor, insira um número.")
+
+class Game:
+    def __init__(self, players):
+        self.players = players
+        self.current_player_index = 0
+
+    def play_round(self):
+        current_player = self.players[self.current_player_index]
+        played_card = current_player.play_card()
+        attribute = current_player.choose_attribute()
+
+        print(f"{current_player.name} escolheu {attribute} com a carta {played_card.name} ({getattr(played_card, attribute)})")
+
+        best_card = played_card
+        winner = current_player
+
+        for player in self.players:
+            if player != current_player:
+                card = player.play_card()
+                print(f"{player.name} jogou {card.name} ({getattr(card, attribute)})")
+
+                if card.compare(best_card, attribute) > 0:
+                    best_card = card
+                    winner = player
+
+        winner.cards.append(played_card)
+        for player in self.players:
+            if player != current_player:
+                winner.cards.append(card)
+
+        print(f"{winner.name} ganhou a rodada com a carta {best_card.name}\n")
+        self.current_player_index = (self.current_player_index + 1) % len(self.players)
+
+    def is_game_over(self):
+        return any(len(player.cards) == 0 for player in self.players)
+
+    def play_game(self):
+        while not self.is_game_over():
+            self.play_round()
+
+        for player in self.players:
+            if len(player.cards) > 0:
+                print(f"{player.name} venceu o jogo!")
+                break
+
+# Lista de cartas atualizada
+cards = [
+    Card("Xsaitama", 10, 7, 5, 6),
+    Card("Xinvencivel", 8, 7, 5, 6),
+    Card("doutor manhatam", 7, 6, 7, 10),
+    Card("Xspaw", 6, 5, 5, 0),
+    Card("chapolin colorado", 8, 5, 10, 5),
+    Card("Xcapitão planeta", 8, 8, 7, 6),
+    Card("grande sayaman", 9, 6, 7, 7),
+    Card("XDeku", 7, 7, 5, 6),
+    Card("Sailor moon", 6, 5, 6, 8),
+    Card("Meninas superpoderosas", 7, 6, 5, 5),
+    Card("Ben 10", 8, 9, 9, 5),
+    Card("XHomem aranha", 6, 6, 8, 6),
+    Card("XCapitão América", 6, 6, 6, 7),
+    Card("XWolverine", 6, 5, 4, 10),
+    Card("XHulk", 10, 5, 2, 9),
+    Card("XPantera Negra", 6, 6, 7, 6),
+    Card("XCapita marvel", 9, 8, 6, 6),
+    Card("XViúva negra", 6, 6, 7, 6),
+    Card("XJean grey", 5, 5, 7, 5),
+    Card("XFeiticeira escarlate", 5, 5, 7, 7),
+    Card("XTempestade", 5, 6, 5, 5),
+    Card("XSuperman", 10, 8, 5, 9),
+    Card("XBatman", 6, 5, 10, 5),
+    Card("XFlash", 5, 10, 6, 6),
+    Card("XAsa noturna", 6, 6, 7, 5),
+    Card("XLanterna Verde", 6, 7, 7, 5),
+    Card("XMulher maravilha", 9, 6, 6, 6),
+    Card("Mulher gavião", 7, 7, 6, 7),
+    Card("XSupergilr", 8, 8, 5, 8),
+    Card("XBat girl", 6, 5, 8, 5),
+    Card("XZatanna", 5, 5, 7, 5),
+    Card("XSuper Kennen", 6, 10, 7, 4)
+]
+
+# Embaralhar cartas e dividir entre jogadores
+random.shuffle(cards)
+players = [
+    Player("Jogador Humano", cards[:8], is_human=True),
+    Player("Jogador 2", cards[8:16]),
+    Player("Jogador 3", cards[16:24]),
+    Player("Jogador 4", cards[24:])
+]
+
+# Iniciar jogo
+game = Game(players)
+game.play_game()
