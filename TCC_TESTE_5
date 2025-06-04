@@ -1,0 +1,189 @@
+import random
+
+class Card:
+    def __init__(self, name, força, velocidade, inteligencia, vigor):
+        self.name = name
+        self.força = força
+        self.velocidade = velocidade
+        self.inteligencia = inteligencia
+        self.vigor = vigor
+
+    def compare(self, other, attribute):
+        return getattr(self, attribute) - getattr(other, attribute)
+
+    def get_best_attribute(self):
+        atributos = ['força', 'velocidade', 'inteligencia', 'vigor']
+        return max(atributos, key=lambda attr: getattr(self, attr))
+
+    def total(self):
+        return self.força + self.velocidade + self.inteligencia + self.vigor
+
+class Player:
+    def __init__(self, name, cards, is_human=False):
+        self.name = name
+        self.cards = cards
+        self.is_human = is_human
+        self.last_attribute = None
+        self.rounds_won = 0
+
+    def choose_attribute(self):
+        if self.is_human:
+            attributes = ['força', 'velocidade', 'inteligencia', 'vigor']
+            while True:
+                choice = input(f"{self.name}, escolha um atributo {attributes}: ").strip().lower()
+                if choice in attributes:
+                    self.last_attribute = choice
+                    return choice
+                print("Escolha inválida. Tente novamente.")
+        else:
+            if self.cards:
+                best_card = max(self.cards, key=lambda c: c.total())
+                attribute = best_card.get_best_attribute()
+                self.last_attribute = attribute
+                return attribute
+            else:
+                return None
+
+    def play_card(self):
+        if not self.cards:
+            return None
+        if self.is_human:
+            return self.choose_card()
+        else:
+            if self.last_attribute:
+                best_card = max(self.cards, key=lambda c: getattr(c, self.last_attribute))
+            else:
+                best_card = max(self.cards, key=lambda c: c.total())
+            self.cards.remove(best_card)
+            return best_card
+
+    def choose_card(self):
+        print(f"\n{self.name}, estas são as suas cartas:")
+        for idx, card in enumerate(self.cards):
+            print(f"{idx + 1}. {card.name} - Força: {card.força}, Velocidade: {card.velocidade}, Inteligência: {card.inteligencia}, Vigor: {card.vigor}")
+
+        while True:
+            try:
+                choice = int(input("Escolha uma carta para jogar (número): ")) - 1
+                if 0 <= choice < len(self.cards):
+                    return self.cards.pop(choice)
+                else:
+                    print("Escolha inválida. Tente novamente.")
+            except ValueError:
+                print("Entrada inválida. Por favor, insira um número.")
+
+class Game:
+    def __init__(self, players):
+        self.players = players
+        self.current_player_index = 0
+        self.round_count = 0
+
+    def show_status(self):
+        print("\n=== Placar Atual ===")
+        for player in self.players:
+            print(f"{player.name}: {len(player.cards)} cartas | Rodadas vencidas: {player.rounds_won}")
+        print("====================\n")
+
+    def play_round(self):
+        self.round_count += 1
+        current_player = self.players[self.current_player_index]
+        print(f"\n=== Rodada {self.round_count} ===")
+        print(f"Vez de {current_player.name}")
+        played_cards = {}
+
+        first_card = current_player.play_card()
+        if not first_card:
+            return  
+        attribute = current_player.choose_attribute()
+        if not attribute:
+            return
+        print(f"\n{current_player.name} escolheu '{attribute.upper()}' com a carta {first_card.name} ({getattr(first_card, attribute)})")
+        played_cards[current_player] = first_card
+
+        for player in self.players:
+            if player != current_player and player.cards:
+                player.last_attribute = attribute
+                card = player.play_card()
+                if card:
+                    played_cards[player] = card
+                    print(f"{player.name} jogou {card.name} ({getattr(card, attribute)})")
+
+        best_player = current_player
+        best_card = first_card
+        for player, card in played_cards.items():
+            if card.compare(best_card, attribute) > 0:
+                best_player = player
+                best_card = card
+
+        print(f"\n🎉 {best_player.name} ganhou a rodada com a carta {best_card.name} ({getattr(best_card, attribute)})")
+        best_player.rounds_won += 1
+
+        for card in played_cards.values():
+            best_player.cards.append(card)
+
+        self.show_status()
+
+        self.current_player_index = (self.current_player_index + 1) % len(self.players)
+
+    def is_game_over(self):
+        players_with_cards = [player for player in self.players if len(player.cards) > 0]
+        return len(players_with_cards) == 1
+
+    def show_final_results(self):
+        print("\n=== FIM DE JOGO ===")
+        for player in self.players:
+            print(f"{player.name} - Cartas restantes: {len(player.cards)} | Rodadas vencidas: {player.rounds_won}")
+
+        winner = max(self.players, key=lambda p: len(p.cards))
+        print(f"\n🏆 {winner.name} venceu o jogo com {len(winner.cards)} cartas!")
+
+    def play_game(self):
+        while not self.is_game_over():
+            self.play_round()
+        self.show_final_results()
+
+cards = [
+    Card("saitama", 10, 7, 5, 6),
+    Card("invencivel", 8, 7, 5, 6),
+    Card("doutor manhatam", 7, 6, 7, 10),
+    Card("spaw", 6, 5, 5, 0),
+    Card("chapolin colorado", 8, 5, 10, 5),
+    Card("capitão planeta", 8, 8, 7, 6),
+    Card("grande sayaman", 9, 6, 7, 7),
+    Card("Deku", 7, 7, 5, 6),
+    Card("Sailor moon", 6, 5, 6, 8),
+    Card("Meninas superpoderosas", 7, 6, 5, 5),
+    Card("Ben 10", 8, 9, 9, 5),
+    Card("Homem aranha", 6, 6, 8, 6),
+    Card("Capitão América", 6, 6, 6, 7),
+    Card("Wolverine", 6, 5, 4, 10),
+    Card("Hulk", 10, 5, 2, 9),
+    Card("Pantera Negra", 6, 6, 7, 6),
+    Card("Capita marvel", 9, 8, 6, 6),
+    Card("Viúva negra", 6, 6, 7, 6),
+    Card("Jean grey", 5, 5, 7, 5),
+    Card("Feiticeira escarlate", 5, 5, 7, 7),
+    Card("Tempestade", 5, 6, 5, 5),
+    Card("Superman", 10, 8, 5, 9),
+    Card("Batman", 6, 5, 10, 5),
+    Card("Flash", 5, 10, 6, 6),
+    Card("Asa noturna", 6, 6, 7, 5),
+    Card("Lanterna Verde", 6, 7, 7, 5),
+    Card("Mulher maravilha", 9, 6, 6, 6),
+    Card("Mulher gavião", 7, 7, 6, 7),
+    Card("Supergilr", 8, 8, 5, 8),
+    Card("Bat girl", 6, 5, 8, 5),
+    Card("Zatanna", 5, 5, 7, 5),
+    Card("Super Kennen", 6, 10, 7, 4)
+]
+
+random.shuffle(cards)
+players = [
+    Player("Jogador Humano", cards[:8], is_human=True),
+    Player("Jogador 2", cards[8:16]),
+    Player("Jogador 3", cards[16:24]),
+    Player("Jogador 4", cards[24:])
+]
+
+game = Game(players)
+game.play_game()
